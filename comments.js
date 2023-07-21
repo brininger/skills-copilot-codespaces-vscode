@@ -1,89 +1,39 @@
-// Creat web server
+// Create web server
 
-// 1. Import Express
+// Import modules
 const express = require('express');
-
-// 2. Create an express app
-const app = express();
-
-// 3. Import file system
-const fs = require('fs');
-
-// 4. Import path
-const path = require('path');
-
-// 5. Import body-parser
 const bodyParser = require('body-parser');
+const fs = require('fs');
+const app = express();
+const port = 3000;
 
-// 6. Import mongoose
-const mongoose = require('mongoose');
-
-// 7. Import model
-const Comment = require('./models/comment');
-
-// 8. Connect to database
-mongoose.connect('mongodb://localhost:27017/express-demo', { useNewUrlParser: true });
-
-// 9. Set view engine
-app.set('view engine', 'pug');
-
-// 10. Set view folder
-app.set('views', './views');
-
-// 11. Set static folder
-app.use(express.static('public'));
-
-// 12. Set body-parser
+// Set up body parser
+app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
-// 13. Create home route
+// Set up static files
+app.use(express.static(__dirname + '/public'));
+
+// Set up template engine
+app.set('view engine', 'ejs');
+
+// Set up data
+let comments = [];
+
+// Set up routes
 app.get('/', (req, res) => {
     res.render('index', {
-        name: 'AAA'
+        comments: comments
     });
 });
 
-// 14. Create comments route
-app.get('/comments', (req, res) => {
-    Comment.find().then((comments) => {
-        res.render('comments/index', {
-            comments: comments
-        });
-    });
+app.post('/add-comment', (req, res) => {
+    let comment = req.body.comment;
+    comments.push(comment);
+    res.redirect('/');
 });
 
-// 15. Create comments/new route
-app.get('/comments/new', (req, res) => {
-    res.render('comments/new');
+// Set up server
+app.listen(port, () => {
+    console.log(`Server is listening on port ${port}`);
 });
-
-// 16. Create comments post route
-app.post('/comments', (req, res) => {
-    const comment = new Comment(req.body);
-    comment.save().then(() => {
-        res.redirect('/comments');
-    });
-});
-
-// 17. Create comments/:id route
-app.get('/comments/:id', (req, res) => {
-    Comment.findById(req.params.id).then((comment) => {
-        res.render('comments/show', {
-            comment: comment
-        });
-    });
-});
-
-// 18. Create comments/:id/edit route
-app.get('/comments/:id/edit', (req, res) => {
-    Comment.findById(req.params.id).then((comment) => {
-        res.render('comments/edit', {
-            comment: comment
-        });
-    });
-});
-
-// 19. Create comments/:id PUT route
-app.put('/comments/:id', (req, res) => {
-    Comment.findByIdAndUpdate(req
